@@ -421,6 +421,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      height: 100dvh; /* iOS Safari: accounts for browser chrome */
       overflow: hidden;
     }
 
@@ -439,7 +440,8 @@
     .sleep-carousel-inner {
       position: relative;
       height: min(calc(100vh - 200px), 76vh);
-      width: calc(min(calc(100vh - 200px), 76vh) * 1545 / 2000);
+      height: min(calc(100dvh - 200px), 76dvh);
+      width: calc(min(calc(100dvh - 200px), 76dvh) * 1545 / 2000);
       max-width: 58vw;
     }
 
@@ -542,15 +544,78 @@
     }
     .sleep-info-links a:hover { text-decoration-color: var(--dark); }
 
-    /* RESPONSIVE */
-    @media (max-width: 680px) {
-      .pillar-body  { padding: 44px 22px 72px; }
-      .stats-row    { grid-template-columns: 1fr; border-top: none; }
-      .stat-block   { border-top: 0.5px solid var(--dark); border-left: none !important; padding-left: 0 !important; }
-      .ref-section  { grid-template-columns: 1fr; gap: 30px; }
-      #back-btn     { left: 20px; top: 18px; }
-      .habit-card   { padding: 36px 20px; }
-      .home-title   { font-size: clamp(1.8rem, 8vw, 3rem); }
+    /* ── RESPONSIVE: TABLET + MOBILE ─────────────────────── */
+    @media (max-width: 768px) {
+
+      /* HOME: 2×2 moodboard instead of 4-column strip */
+      .moodboard {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+
+      .home-title-overlay { top: 12px; }
+      .home-title-overlay span {
+        font-size: 0.5rem;
+        letter-spacing: 0.1em;
+      }
+
+      .tile-name {
+        font-size: clamp(0.55rem, 2.4vw, 0.75rem);
+        letter-spacing: 0.1em;
+      }
+
+      /* BACK BUTTON */
+      #back-btn {
+        left: 18px; top: 16px;
+        font-size: 0.44rem;
+        letter-spacing: 0.12em;
+      }
+
+      /* PILLAR HERO: tighter padding on small screens */
+      .sleep-hero { padding: 44px 16px 10px; }
+
+      /* CAROUSEL: width-driven on mobile (portrait phone) */
+      .sleep-carousel-inner {
+        width: 82vw;
+        height: calc(82vw * 2000 / 1545);
+        max-width: none;
+      }
+
+      .sleep-nav { margin-top: 10px; }
+      .sleep-nav-btn { padding: 4px 10px; font-size: 0.65rem; }
+      .sleep-counter { font-size: 0.3rem; letter-spacing: 0.28em; }
+      .sleep-nav-dots { gap: 5px; }
+      .sleep-nav-dot { width: 4px; height: 4px; }
+
+      /* INFO BAR: auto height, tighter padding */
+      .sleep-info-bar {
+        height: auto;
+        min-height: 72px;
+        padding: 10px 20px;
+        align-items: center;
+      }
+
+      .sleep-info-col {
+        padding: 0 10px;
+        gap: 10px;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .sleep-info-col:first-child { padding-left: 0; }
+
+      .sleep-info-col-label {
+        font-size: 0.36rem;
+        letter-spacing: 0.12em;
+        margin-bottom: 2px;
+      }
+
+      .sleep-info-links { gap: 2px 10px; }
+      .sleep-info-links li {
+        font-size: 0.4rem;
+        white-space: normal;
+        word-break: break-word;
+      }
+      .price { font-size: 0.36rem; }
     }
   </style>
 </head>
