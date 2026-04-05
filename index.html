@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Four Pillars of Longevity</title>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700;800&family=Josefin+Sans:wght@100;200;300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #f4f0ea;
+      --dark:    #1c2416;
+      --mid:     #6b6258;
+      --line:    #d8d2c6;
+      --accent:  #2e4a3e;
+      --display: 'Cormorant Garamond', serif;
+      --bold:    'Josefin Sans', sans-serif;
+      --sans:    'Josefin Sans', sans-serif;
+      --horizon: 'Exo 2', sans-serif;
+    }
+
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: var(--bg);
+    }
+    body { font-family: var(--sans); font-weight: 300; color: var(--dark); }
+
+    /* ─────────────────────────────────
+       HOME VIEW — MOODBOARD
+    ───────────────────────────────── */
+    #home-view {
+      position: fixed; inset: 0; z-index: 1;
+      background: var(--bg);
+      transition: opacity 0.55s ease;
+    }
+    #home-view.hidden { opacity: 0; pointer-events: none; }
+
+    /* Full-screen moodboard grid — no gaps */
+    .moodboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-rows: 1fr;
+      width: 100%; height: 100%;
+      gap: 0;
+    }
+
+    /* Floating title — overlaid across top of all panels */
+    .home-title-overlay {
+      position: absolute;
+      top: 22px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      text-align: center;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .home-title-overlay span {
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 800;
+      font-style: normal;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.92);
+      text-shadow: 0 1px 10px rgba(0,0,0,0.5);
+    }
+
+    /* Each tile IS the clickable hotspot */
+    .pillar-hotspot {
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Inset border on hover — clear click signal */
+    .pillar-hotspot::after {
+      content: '';
+      position: absolute; inset: 0;
+      box-shadow: inset 0 0 0 0px rgba(255,255,255,0.7);
+      transition: box-shadow 0.3s ease;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .pillar-hotspot:hover::after {
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.7);
+    }
+
+    .tile-img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  filter 0.4s ease;
+      pointer-events: none;
+    }
+    .pillar-hotspot:hover .tile-img {
+      transform: scale(1.03);
+      filter: brightness(0.88);
+    }
+
+    /* Scrim */
+    .tile-scrim {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.15);
+      pointer-events: none; z-index: 1;
+    }
+
+    /* Label — centered in tile */
+    .tile-label {
+      position: absolute; inset: 0; z-index: 2;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 5px;
+      pointer-events: none;
+    }
+
+    .tile-num {
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.44rem;
+      font-weight: 700;
+      font-style: normal;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .tile-name {
+      font-family: 'Exo 2', sans-serif;
+      font-size: clamp(0.7rem, 1vw, 0.9rem);
+      font-weight: 800;
+      font-style: normal;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.95);
+      text-align: center;
+      line-height: 1.3;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+    }
+
+    .home-credit {
+      position: fixed; bottom: 10px; left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 0.38rem; font-weight: 200; font-style: normal;
+      letter-spacing: 0.38em; text-transform: uppercase;
+      color: rgba(255,255,255,0.2);
+      white-space: nowrap; z-index: 5;
+      pointer-events: none;
+    }
+
+    /* Kept for JS compatibility — not visible */
+    #overlay, #overlay-dark { display: none; }
+
+    /* ─────────────────────────────────
+       PILLAR VIEW
+    ───────────────────────────────── */
+    #pillar-view {
+      position: fixed; inset: 0; background: var(--bg);
+      z-index: 20; overflow-y: auto;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.55s ease;
+    }
+    #pillar-view.visible { opacity: 1; pointer-events: all; }
+    #pillar-view:not(.visible) * { pointer-events: none !important; }
+
+    /* BACK BUTTON */
+    #back-btn {
+      position: fixed; top: 30px; left: 40px; z-index: 30;
+      background: none; border: none; cursor: pointer; padding: 0;
+      font-family: 'Exo 2', sans-serif; font-size: 0.52rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: rgba(28, 36, 22, 0.4); font-weight: 700;
+      transition: color 0.2s;
+    }
+    #back-btn:hover { color: var(--dark); }
+
+    .pillar-page { display: none; }
+    .pillar-page.active { display: block; }
+
+    /* ── PILLAR HERO ── */
+    .pillar-hero {
+      position: relative; min-height: 50vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 96px 40px 72px; overflow: hidden;
+    }
+
+    .pillar-orb {
+      position: absolute;
+      width: min(72vmin, 560px);
+      height: min(72vmin, 560px);
+      border-radius: 50%;
+      top: 50%; left: 50%;
+      animation: pillar-orb-breathe 9s ease-in-out infinite;
+    }
+
+    @keyframes pillar-orb-breathe {
+      0%, 100% { opacity: 0.88; transform: translate(-50%, -50%) scale(1); filter: blur(2px); }
+      50%       { opacity: 1;    transform: translate(-50%, -50%) scale(1.022); filter: blur(1px); }
+    }
+
+    /* Sleep — lavender / soft blue */
+    .sleep-orb {
+      background:
+        radial-gradient(circle at 42% 38%, rgba(162, 182, 238, 0.92) 0%, transparent 46%),
+        radial-gradient(circle at 65% 52%, rgba(182, 162, 228, 0.78) 0%, transparent 48%),
+        radial-gradient(circle at 33% 64%, rgba(148, 178, 236, 0.84) 0%, transparent 50%),
+        radial-gradient(circle at 60% 34%, rgba(202, 188, 246, 0.68) 0%, transparent 44%),
+        radial-gradient(circle at 50% 50%, rgba(228, 222, 255, 0.38) 0%, transparent 65%);
+    }
+
+    /* Nutrition — sage / warm gold */
+    .nutrition-orb {
+      background:
+        radial-gradient(circle at 40% 40%, rgba(145, 192, 145, 0.92) 0%, transparent 46%),
+        radial-gradient(circle at 64% 38%, rgba(185, 202, 136, 0.78) 0%, transparent 46%),
+        radial-gradient(circle at 36% 65%, rgba(128, 182, 152, 0.84) 0%, transparent 50%),
+        radial-gradient(circle at 65% 65%, rgba(192, 192, 135, 0.68) 0%, transparent 43%),
+        radial-gradient(circle at 50% 50%, rgba(218, 232, 202, 0.38) 0%, transparent 63%);
+    }
+
+    /* Exercise — terracotta / warm peach */
+    .exercise-orb {
+      background:
+        radial-gradient(circle at 46% 40%, rgba(222, 162, 118, 0.92) 0%, transparent 46%),
+        radial-gradient(circle at 64% 52%, rgba(232, 185, 135, 0.78) 0%, transparent 48%),
+        radial-gradient(circle at 34% 60%, rgba(215, 150, 106, 0.84) 0%, transparent 50%),
+        radial-gradient(circle at 60% 35%, rgba(238, 198, 152, 0.68) 0%, transparent 44%),
+        radial-gradient(circle at 50% 50%, rgba(248, 226, 208, 0.38) 0%, transparent 63%);
+    }
+
+    /* Emotional Health — dusty rose / blush */
+    .emotional-orb {
+      background:
+        radial-gradient(circle at 44% 42%, rgba(222, 162, 175, 0.92) 0%, transparent 48%),
+        radial-gradient(circle at 62% 38%, rgba(230, 178, 206, 0.78) 0%, transparent 46%),
+        radial-gradient(circle at 36% 63%, rgba(212, 155, 168, 0.84) 0%, transparent 50%),
+        radial-gradient(circle at 64% 65%, rgba(236, 185, 212, 0.68) 0%, transparent 43%),
+        radial-gradient(circle at 50% 50%, rgba(248, 226, 232, 0.38) 0%, transparent 63%);
+    }
+
+    .pillar-hero-content {
+      position: relative; z-index: 2; text-align: center;
+    }
+
+    .pillar-eyebrow {
+      font-family: 'Josefin Sans', sans-serif; font-size: 0.44rem;
+      letter-spacing: 0.52em; text-transform: uppercase;
+      color: rgba(28, 36, 22, 0.35); font-weight: 200; margin-bottom: 14px;
+    }
+
+    .pillar-title {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: clamp(3.8rem, 10vw, 8.5rem);
+      font-weight: 100;
+      line-height: 0.95; color: var(--dark);
+      letter-spacing: 0.28em; text-transform: uppercase;
+    }
+
+    .pillar-tagline {
+      font-family: 'Josefin Sans', sans-serif; font-size: 0.44rem;
+      letter-spacing: 0.46em; text-transform: uppercase;
+      color: rgba(28, 36, 22, 0.32); font-weight: 200; margin-top: 18px;
+    }
+
+    /* ── PILLAR BODY ── */
+    .pillar-body {
+      max-width: 780px; margin: 0 auto; padding: 60px 48px 96px;
+    }
+
+    /* PULL QUOTE */
+    .pull-quote {
+      font-family: var(--display); font-style: italic; font-weight: 300;
+      font-size: clamp(1.18rem, 1.9vw, 1.42rem);
+      line-height: 1.75; text-align: center; color: var(--dark);
+      max-width: 600px; margin: 0 auto 60px;
+      padding-bottom: 56px; border-bottom: 0.5px solid var(--line);
+    }
+
+    /* STATS */
+    .stats-row {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      border-top: 0.5px solid var(--dark);
+      margin-bottom: 64px;
+    }
+
+    .stat-block { padding: 30px 24px 26px 0; }
+    .stat-block + .stat-block {
+      padding-left: 24px;
+      border-left: 0.5px solid var(--line);
+    }
+
+    .stat-number {
+      font-family: var(--display); font-weight: 300;
+      font-size: clamp(1.8rem, 3.8vw, 3.2rem);
+      line-height: 1; letter-spacing: -0.02em;
+      color: var(--dark); margin-bottom: 10px;
+    }
+
+    .stat-label {
+      font-family: 'Josefin Sans', sans-serif; font-size: 0.48rem;
+      font-weight: 200; letter-spacing: 0.3em;
+      text-transform: uppercase; color: var(--mid); line-height: 1.75;
+    }
+
+    /* SECTION LABEL */
+    .section-label {
+      font-family: 'Josefin Sans', sans-serif; font-size: 0.44rem;
+      letter-spacing: 0.46em; text-transform: uppercase;
+      color: var(--accent); font-weight: 200; margin-bottom: 18px;
+    }
+
+    /* ── CAROUSEL ── */
+    .habits-section { margin-bottom: 60px; }
+
+    .carousel-inner {
+      display: grid; /* grid overlap: all cards in same cell */
+      min-height: 250px;
+    }
+
+    .habit-card {
+      grid-area: 1 / 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 14px; padding: 50px 36px;
+      background: rgba(255, 255, 255, 0.52);
+      border: 0.5px solid var(--line);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.38s ease;
+    }
+
+    .habit-card.active { opacity: 1; pointer-events: all; }
+
+    .card-counter {
+      font-family: 'Josefin Sans', sans-serif; font-size: 0.38rem;
+      letter-spacing: 0.44em; text-transform: uppercase;
+      color: rgba(28, 36, 22, 0.22); font-weight: 200;
+    }
+
+    .card-statement {
+      font-family: var(--display); font-weight: 300;
+      font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+      line-height: 1.3; color: var(--dark);
+      text-align: center; max-width: 460px;
+    }
+
+    .card-note {
+      font-family: 'Josefin Sans', sans-serif; font-size: 0.6rem;
+      font-weight: 200; letter-spacing: 0.06em; color: var(--mid);
+      line-height: 1.9; text-align: center; max-width: 380px;
+    }
+
+    .carousel-controls {
+      display: flex; align-items: center;
+      justify-content: center; gap: 18px; margin-top: 20px;
+    }
+
+    .carousel-btn {
+      background: none; border: none; cursor: pointer;
+      font-family: 'Josefin Sans', sans-serif; font-size: 1rem;
+      color: rgba(28, 36, 22, 0.32);
+      padding: 4px 10px; border-radius: 50px;
+      border: 0.5px solid rgba(28, 36, 22, 0.15);
+      transition: color 0.2s, border-color 0.2s;
+      line-height: 1;
+    }
+    .carousel-btn:hover { color: var(--dark); border-color: rgba(28, 36, 22, 0.4); }
+
+    .carousel-dots { display: flex; gap: 6px; align-items: center; }
+
+    .carousel-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: rgba(28, 36, 22, 0.18);
+      cursor: pointer;
+      transition: background 0.28s, transform 0.28s;
+    }
+    .carousel-dot.active { background: var(--dark); transform: scale(1.35); }
+
+    /* REF SECTION */
+    .ref-section {
+      border-top: 0.5px solid var(--line); padding-top: 42px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+    }
+
+    .ref-label {
+      font-family: 'Josefin Sans', sans-serif; font-size: 0.4rem;
+      letter-spacing: 0.46em; text-transform: uppercase;
+      color: var(--accent); font-weight: 200;
+      margin-bottom: 14px; padding-bottom: 10px;
+      border-bottom: 0.5px solid var(--line);
+    }
+
+    .ref-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+    .ref-list li {
+      font-family: 'Josefin Sans', sans-serif; font-size: 0.58rem;
+      font-weight: 200; letter-spacing: 0.04em; line-height: 1.6;
+    }
+
+    .ref-list a {
+      color: rgba(28, 36, 22, 0.5); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .ref-list a:hover { color: var(--dark); }
+
+    .price {
+      font-size: 0.56rem; color: var(--mid); margin-left: 4px; opacity: 0.7;
+    }
+
+    /* FOOTER */
+    .pillar-footer {
+      text-align: center; padding: 20px 40px 36px;
+      font-family: var(--sans); font-size: 0.5rem;
+      letter-spacing: 0.1em; color: rgba(28, 36, 22, 0.2);
+    }
+
+    /* ── SLEEP PAGE: CAROUSEL-FIRST LAYOUT ────────────────── */
+    .sleep-page {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Top: carousel hero fills remaining height above info bar */
+    .sleep-hero {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 40px 16px;
+    }
+
+    /* Poster container — height-driven so it fills the hero area */
+    .sleep-carousel-inner {
+      position: relative;
+      height: min(calc(100vh - 200px), 76vh);
+      width: calc(min(calc(100vh - 200px), 76vh) * 1545 / 2000);
+      max-width: 58vw;
+    }
+
+    .sleep-slide {
+      position: absolute; inset: 0;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.55s ease;
+    }
+    .sleep-slide.active { opacity: 1; pointer-events: all; }
+
+    .sleep-slide-img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+    }
+
+    /* Nav sits directly below the poster */
+    .sleep-nav {
+      position: relative;
+      display: flex; align-items: center;
+      justify-content: center; gap: 18px;
+      margin-top: 14px; flex-shrink: 0;
+      width: 100%;
+    }
+
+    .sleep-nav-btn {
+      background: none; cursor: pointer;
+      border: 0.5px solid rgba(28,36,22,0.2);
+      color: rgba(28,36,22,0.42);
+      font-family: 'Josefin Sans', sans-serif; font-size: 0.75rem;
+      padding: 5px 13px; border-radius: 50px; line-height: 1;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .sleep-nav-btn:hover { color: var(--dark); border-color: rgba(28,36,22,0.52); }
+
+    .sleep-nav-dots { display: flex; gap: 6px; align-items: center; }
+
+    .sleep-nav-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: rgba(28,36,22,0.18); cursor: pointer;
+      transition: background 0.25s, transform 0.25s;
+    }
+    .sleep-nav-dot.active { background: var(--dark); transform: scale(1.3); }
+
+    .sleep-counter {
+      position: absolute; right: 0;
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 0.36rem; font-weight: 200; letter-spacing: 0.36em;
+      color: rgba(28,36,22,0.26);
+    }
+
+    /* Bottom: compact info bar */
+    .sleep-info-bar {
+      flex-shrink: 0;
+      border-top: 0.5px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr 0.5px 1fr;
+      padding: 0 60px;
+      height: 100px;
+    }
+
+    .sleep-info-col {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding: 0 32px;
+    }
+    .sleep-info-col:first-child { padding-left: 0; }
+
+    .sleep-info-col-divider {
+      background: var(--line);
+      width: 0.5px;
+      height: 100%;
+    }
+
+    .sleep-info-col-label {
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.48rem; font-weight: 800;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--dark); white-space: nowrap; flex-shrink: 0;
+    }
+
+    .sleep-info-links {
+      display: flex; flex-wrap: wrap;
+      gap: 4px 18px; list-style: none;
+    }
+
+    .sleep-info-links li {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 0.54rem; font-weight: 200;
+      letter-spacing: 0.06em; color: var(--dark);
+      white-space: nowrap;
+    }
+
+    .sleep-info-links a {
+      color: var(--dark); text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-color: rgba(28,36,22,0.22);
+      transition: text-decoration-color 0.2s;
+    }
+    .sleep-info-links a:hover { text-decoration-color: var(--dark); }
+
+    /* RESPONSIVE */
+    @media (max-width: 680px) {
+      .pillar-body  { padding: 44px 22px 72px; }
+      .stats-row    { grid-template-columns: 1fr; border-top: none; }
+      .stat-block   { border-top: 0.5px solid var(--dark); border-left: none !important; padding-left: 0 !important; }
+      .ref-section  { grid-template-columns: 1fr; gap: 30px; }
+      #back-btn     { left: 20px; top: 18px; }
+      .habit-card   { padding: 36px 20px; }
+      .home-title   { font-size: clamp(1.8rem, 8vw, 3rem); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── HOME VIEW — MOODBOARD ── -->
+  <div id="home-view">
+    <div class="home-title-overlay">
+      <span>Longevity Science &nbsp;—&nbsp; Distilled</span>
+    </div>
+    <div class="moodboard">
+
+      <div class="pillar-hotspot" data-pillar="sleep">
+        <img src="sleep.jpeg" alt="Sleep" class="tile-img" style="object-position: center 35%;" />
+        <div class="tile-scrim"></div>
+        <div class="tile-label">
+          <span class="tile-num">01</span>
+          <span class="tile-name">Sleep</span>
+        </div>
+      </div>
+
+      <div class="pillar-hotspot" data-pillar="nutrition">
+        <img src="nutrition.jpeg" alt="Nutrition" class="tile-img" style="object-position: center 50%;" />
+        <div class="tile-scrim"></div>
+        <div class="tile-label">
+          <span class="tile-num">02</span>
+          <span class="tile-name">Nutrition</span>
+        </div>
+      </div>
+
+      <div class="pillar-hotspot" data-pillar="exercise">
+        <img src="exercise.jpeg" alt="Exercise" class="tile-img" style="object-position: center 40%;" />
+        <div class="tile-scrim"></div>
+        <div class="tile-label">
+          <span class="tile-num">03</span>
+          <span class="tile-name">Exercise</span>
+        </div>
+      </div>
+
+      <div class="pillar-hotspot" data-pillar="emotional">
+        <img src="emotional_health.jpeg" alt="Emotional Health" class="tile-img" style="object-position: center 45%;" />
+        <div class="tile-scrim"></div>
+        <div class="tile-label">
+          <span class="tile-num">04</span>
+          <span class="tile-name">Emotional Health</span>
+        </div>
+      </div>
+
+    </div>
+    <p class="home-credit">Designing the Longevity Brand &nbsp;·&nbsp; Maya Glenn &nbsp;·&nbsp; UT Austin 2026</p>
+  </div>
+
+  <!-- Kept for JS variable compatibility -->
+  <div id="overlay"></div>
+  <div id="overlay-dark"></div>
+
+  <!-- ── PILLAR VIEW ── -->
+  <div id="pillar-view">
+    <button id="back-btn">← Overview</button>
+
+    <!-- ════════════ SLEEP ════════════ -->
+    <div class="pillar-page" id="page-sleep">
+      <div class="sleep-page">
+
+        <!-- Hero: large centered carousel -->
+        <div class="sleep-hero">
+          <div class="sleep-carousel-inner">
+            <div class="sleep-slide active">
+              <img src="sleep_infographics/1.png" alt="Sleep infographic 1" class="sleep-slide-img" />
+            </div>
+            <div class="sleep-slide">
+              <img src="sleep_infographics/2.png" alt="Sleep infographic 2" class="sleep-slide-img" />
+            </div>
+            <div class="sleep-slide">
+              <img src="sleep_infographics/3.png" alt="Sleep infographic 3" class="sleep-slide-img" />
+            </div>
+            <div class="sleep-slide">
+              <img src="sleep_infographics/4.png" alt="Sleep infographic 4" class="sleep-slide-img" />
+            </div>
+          </div>
+          <div class="sleep-nav">
+            <button class="sleep-nav-btn sleep-prev">&#8592;</button>
+            <div class="sleep-nav-dots">
+              <span class="sleep-nav-dot active"></span>
+              <span class="sleep-nav-dot"></span>
+              <span class="sleep-nav-dot"></span>
+              <span class="sleep-nav-dot"></span>
+            </div>
+            <button class="sleep-nav-btn sleep-next">&#8594;</button>
+            <span class="sleep-counter">01 / 04</span>
+          </div>
+        </div>
+
+        <!-- Info bar: resources + products in one slim row -->
+        <div class="sleep-info-bar">
+          <div class="sleep-info-col">
+            <span class="sleep-info-col-label">Resources</span>
+            <ul class="sleep-info-links">
+              <li><a href="https://www.sleepfoundation.org" target="_blank" rel="noopener">Sleep Foundation</a></li>
+              <li><a href="https://www.hubermanlab.com/topics/sleep" target="_blank" rel="noopener">Huberman Lab</a></li>
+              <li>Why We Sleep &mdash; Matthew Walker</li>
+            </ul>
+          </div>
+          <div class="sleep-info-col-divider"></div>
+          <div class="sleep-info-col">
+            <span class="sleep-info-col-label">Products</span>
+            <ul class="sleep-info-links">
+              <li><a href="https://ouraring.com" target="_blank" rel="noopener">Oura Ring</a> <span class="price">$299&ndash;$499</span></li>
+              <li><a href="https://www.whoop.com" target="_blank" rel="noopener">WHOOP</a> <span class="price">$239</span></li>
+              <li><a href="https://www.eightsleep.com" target="_blank" rel="noopener">Eight Sleep Pod</a> <span class="price">$1,995+</span></li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════════ NUTRITION ════════════ -->
+    <div class="pillar-page" id="page-nutrition">
+      <div class="sleep-page">
+        <div class="sleep-hero">
+          <div class="sleep-carousel-inner">
+            <div class="sleep-slide active">
+              <img src="nutrition_infographics/5.png" alt="Nutrition infographic 1" class="sleep-slide-img" />
+            </div>
+            <div class="sleep-slide">
+              <img src="nutrition_infographics/6.png" alt="Nutrition infographic 2" class="sleep-slide-img" />
+            </div>
+            <div class="sleep-slide">
+              <img src="nutrition_infographics/7.png" alt="Nutrition infographic 3" class="sleep-slide-img" />
+            </div>
+          </div>
+          <div class="sleep-nav">
+            <button class="sleep-nav-btn sleep-prev">&#8592;</button>
+            <div class="sleep-nav-dots">
+              <span class="sleep-nav-dot active"></span>
+              <span class="sleep-nav-dot"></span>
+              <span class="sleep-nav-dot"></span>
+            </div>
+            <button class="sleep-nav-btn sleep-next">&#8594;</button>
+            <span class="sleep-counter">01 / 03</span>
+          </div>
+        </div>
+        <div class="sleep-info-bar">
+          <div class="sleep-info-col">
+            <span class="sleep-info-col-label">Resources</span>
+            <ul class="sleep-info-links">
+              <li><a href="https://www.instagram.com/healthwithhunter" target="_blank" rel="noopener">Health With Hunter</a></li>
+              <li><a href="https://www.hsph.harvard.edu/nutritionsource/processed-foods/" target="_blank" rel="noopener">Harvard Nutrition Source</a></li>
+              <li><a href="https://www.hubermanlab.com/topics/nutrition" target="_blank" rel="noopener">Huberman Lab</a></li>
+            </ul>
+          </div>
+          <div class="sleep-info-col-divider"></div>
+          <div class="sleep-info-col">
+            <span class="sleep-info-col-label">Products</span>
+            <ul class="sleep-info-links">
+              <li><a href="https://jacobproteinbar.com" target="_blank" rel="noopener">Jacob Protein Bars</a></li>
+              <li><a href="https://www.bobbyapproved.com" target="_blank" rel="noopener">Bobby Approved App</a> <span class="price">free</span></li>
+              <li><a href="https://www.maplehillcreamery.com" target="_blank" rel="noopener">Maple Hill Greek Yogurt</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════ EXERCISE ════════════ -->
+    <div class="pillar-page" id="page-exercise">
+      <div class="sleep-page">
+        <div class="sleep-hero">
+          <div class="sleep-carousel-inner">
+            <div class="sleep-slide active">
+              <img src="exercise_infographics/9.png" alt="Exercise infographic 1" class="sleep-slide-img" />
+            </div>
+            <div class="sleep-slide">
+              <img src="exercise_infographics/10.png" alt="Exercise infographic 2" class="sleep-slide-img" />
+            </div>
+            <div class="sleep-slide">
+              <img src="exercise_infographics/11.png" alt="Exercise infographic 3" class="sleep-slide-img" />
+            </div>
+          </div>
+          <div class="sleep-nav">
+            <button class="sleep-nav-btn sleep-prev">&#8592;</button>
+            <div class="sleep-nav-dots">
+              <span class="sleep-nav-dot active"></span>
+              <span class="sleep-nav-dot"></span>
+              <span class="sleep-nav-dot"></span>
+            </div>
+            <button class="sleep-nav-btn sleep-next">&#8594;</button>
+            <span class="sleep-counter">01 / 03</span>
+          </div>
+        </div>
+        <div class="sleep-info-bar">
+          <div class="sleep-info-col">
+            <span class="sleep-info-col-label">Resources</span>
+            <ul class="sleep-info-links">
+              <li><a href="https://peterattiamd.com/category/exercise/" target="_blank" rel="noopener">Peter Attia</a></li>
+              <li><a href="https://www.nike.com/ntc-app" target="_blank" rel="noopener">Nike Training Club</a> <span class="price">free</span></li>
+              <li><a href="https://www.youtube.com/@JeffNippard" target="_blank" rel="noopener">Jeff Nippard</a> <span class="price">free</span></li>
+            </ul>
+          </div>
+          <div class="sleep-info-col-divider"></div>
+          <div class="sleep-info-col">
+            <span class="sleep-info-col-label">Products</span>
+            <ul class="sleep-info-links">
+              <li><a href="https://www.whoop.com" target="_blank" rel="noopener">WHOOP</a> <span class="price">$239</span></li>
+              <li><a href="https://www.apple.com/apple-watch-ultra/" target="_blank" rel="noopener">Apple Watch Ultra</a> <span class="price">$799+</span></li>
+              <li><a href="https://www.onepeloton.com" target="_blank" rel="noopener">Peloton</a> <span class="price">$44/mo (app)</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════ EMOTIONAL HEALTH ════════════ -->
+    <div class="pillar-page" id="page-emotional">
+      <div class="sleep-page">
+        <div class="sleep-hero">
+          <div class="sleep-carousel-inner">
+            <div class="sleep-slide active">
+              <img src="emotional_health_infographics/12.png" alt="Emotional health infographic 1" class="sleep-slide-img" />
+            </div>
+            <div class="sleep-slide">
+              <img src="emotional_health_infographics/13.png" alt="Emotional health infographic 2" class="sleep-slide-img" />
+            </div>
+            <div class="sleep-slide">
+              <img src="emotional_health_infographics/14.png" alt="Emotional health infographic 3" class="sleep-slide-img" />
+            </div>
+          </div>
+          <div class="sleep-nav">
+            <button class="sleep-nav-btn sleep-prev">&#8592;</button>
+            <div class="sleep-nav-dots">
+              <span class="sleep-nav-dot active"></span>
+              <span class="sleep-nav-dot"></span>
+              <span class="sleep-nav-dot"></span>
+            </div>
+            <button class="sleep-nav-btn sleep-next">&#8594;</button>
+            <span class="sleep-counter">01 / 03</span>
+          </div>
+        </div>
+        <div class="sleep-info-bar">
+          <div class="sleep-info-col">
+            <span class="sleep-info-col-label">Resources</span>
+            <ul class="sleep-info-links">
+              <li><a href="https://www.nami.org" target="_blank" rel="noopener">NAMI</a> <span class="price">free</span></li>
+              <li><a href="https://www.headspace.com" target="_blank" rel="noopener">Headspace</a> <span class="price">free tier</span></li>
+              <li><a href="https://www.hubermanlab.com/topics/mental-health" target="_blank" rel="noopener">Huberman Lab</a></li>
+            </ul>
+          </div>
+          <div class="sleep-info-col-divider"></div>
+          <div class="sleep-info-col">
+            <span class="sleep-info-col-label">Products</span>
+            <ul class="sleep-info-links">
+              <li><a href="https://www.calm.com" target="_blank" rel="noopener">Calm</a> <span class="price">$70/yr</span></li>
+              <li><a href="https://www.wakingup.com" target="_blank" rel="noopener">Waking Up</a> <span class="price">$100/yr</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end #pillar-view -->
+
+  <script>
+    // ── VIEW TRANSITIONS (soft fade) ──────────────────────────────────
+    const homeView    = document.getElementById('home-view');
+    const pillarView  = document.getElementById('pillar-view');
+    const backBtn     = document.getElementById('back-btn');
+    // overlay refs kept so nothing errors if old code references them
+    const overlay     = document.getElementById('overlay');
+    const overlayDark = document.getElementById('overlay-dark');
+    let animating     = false;
+
+    document.querySelectorAll('.pillar-hotspot').forEach(hotspot => {
+      hotspot.addEventListener('click', function () {
+        if (animating) return;
+        animating = true;
+        const pillar = this.dataset.pillar;
+
+        homeView.classList.add('hidden');
+
+        setTimeout(() => {
+          document.querySelectorAll('.pillar-page').forEach(p => p.classList.remove('active'));
+          document.getElementById('page-' + pillar).classList.add('active');
+          pillarView.scrollTop = 0;
+          pillarView.classList.add('visible');
+          setTimeout(() => { animating = false; }, 580);
+        }, 500);
+      });
+    });
+
+    backBtn.addEventListener('click', function () {
+      if (animating) return;
+      animating = true;
+
+      pillarView.classList.remove('visible');
+
+      setTimeout(() => {
+        homeView.classList.remove('hidden');
+        setTimeout(() => { animating = false; }, 580);
+      }, 500);
+    });
+
+    // ── CAROUSELS ────────────────────────────────────────────────────
+    document.querySelectorAll('.carousel').forEach(carousel => {
+      const cards   = carousel.querySelectorAll('.habit-card');
+      const dots    = carousel.querySelectorAll('.carousel-dot');
+      const prevBtn = carousel.querySelector('.prev-btn');
+      const nextBtn = carousel.querySelector('.next-btn');
+      let current   = 0;
+
+      function goTo(idx) {
+        cards[current].classList.remove('active');
+        dots[current].classList.remove('active');
+        current = ((idx % cards.length) + cards.length) % cards.length;
+        cards[current].classList.add('active');
+        dots[current].classList.add('active');
+      }
+
+      prevBtn.addEventListener('click', () => goTo(current - 1));
+      nextBtn.addEventListener('click', () => goTo(current + 1));
+      dots.forEach((dot, i) => dot.addEventListener('click', () => goTo(i)));
+    });
+
+    // ── PILLAR INFOGRAPHIC CAROUSELS ──────────────────────────────
+    function initPillarCarousel(pageId) {
+      const container = document.getElementById(pageId);
+      if (!container) return;
+      const slides  = container.querySelectorAll('.sleep-slide');
+      const dots    = container.querySelectorAll('.sleep-nav-dot');
+      const prevBtn = container.querySelector('.sleep-prev');
+      const nextBtn = container.querySelector('.sleep-next');
+      const counter = container.querySelector('.sleep-counter');
+      let current   = 0;
+
+      function goTo(idx) {
+        slides[current].classList.remove('active');
+        dots[current].classList.remove('active');
+        current = ((idx % slides.length) + slides.length) % slides.length;
+        slides[current].classList.add('active');
+        dots[current].classList.add('active');
+        counter.textContent =
+          String(current + 1).padStart(2, '0') + ' / ' +
+          String(slides.length).padStart(2, '0');
+      }
+
+      prevBtn.addEventListener('click', () => goTo(current - 1));
+      nextBtn.addEventListener('click', () => goTo(current + 1));
+      dots.forEach((dot, i) => dot.addEventListener('click', () => goTo(i)));
+
+      document.addEventListener('keydown', (e) => {
+        if (!container.classList.contains('active')) return;
+        if (e.key === 'ArrowRight') goTo(current + 1);
+        if (e.key === 'ArrowLeft')  goTo(current - 1);
+      });
+    }
+
+    ['page-sleep', 'page-nutrition', 'page-exercise', 'page-emotional'].forEach(initPillarCarousel);
+  </script>
+
+</body>
+</html>
