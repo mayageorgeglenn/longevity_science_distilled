@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Four Pillars of Longevity</title>
   <link rel="icon" type="image/png" href="favicon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700;800&family=Josefin+Sans:wght@100;200;300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Josefin+Sans:wght@100;200;300;400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -18,7 +18,7 @@
       --display: 'Cormorant Garamond', serif;
       --bold:    'Josefin Sans', sans-serif;
       --sans:    'Josefin Sans', sans-serif;
-      --horizon: 'Exo 2', sans-serif;
+      --horizon: 'Syne', sans-serif;
     }
 
     html, body {
@@ -58,14 +58,13 @@
     }
 
     .home-title-overlay span {
-      font-family: 'Exo 2', sans-serif;
-      font-size: 0.72rem;
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(0.72rem, 1vw, 1rem);
       font-weight: 800;
-      font-style: normal;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.92);
-      text-shadow: 0 1px 10px rgba(0,0,0,0.5);
+      color: rgba(255,255,255,0.96);
+      text-shadow: 0 1px 14px rgba(0,0,0,0.55);
     }
 
     /* Each tile IS the clickable hotspot */
@@ -76,69 +75,107 @@
       user-select: none;
     }
 
-    /* Inset border on hover — clear click signal */
-    .pillar-hotspot::after {
-      content: '';
-      position: absolute; inset: 0;
-      box-shadow: inset 0 0 0 0px rgba(255,255,255,0.7);
-      transition: box-shadow 0.3s ease;
-      pointer-events: none;
-      z-index: 3;
+    /* Staggered entrance on load */
+    @keyframes tile-in {
+      from { opacity: 0; transform: scale(1.06); }
+      to   { opacity: 1; transform: scale(1); }
     }
-    .pillar-hotspot:hover::after {
-      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.7);
-    }
+    .pillar-hotspot { animation: tile-in 1.1s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .pillar-hotspot:nth-child(1) { animation-delay: 0.05s; }
+    .pillar-hotspot:nth-child(2) { animation-delay: 0.18s; }
+    .pillar-hotspot:nth-child(3) { animation-delay: 0.31s; }
+    .pillar-hotspot:nth-child(4) { animation-delay: 0.44s; }
 
     .tile-img {
       width: 100%; height: 100%;
       object-fit: cover;
       display: block;
-      transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
                   filter 0.4s ease;
       pointer-events: none;
     }
     .pillar-hotspot:hover .tile-img {
-      transform: scale(1.03);
-      filter: brightness(0.88);
+      transform: scale(1.05);
+      filter: brightness(0.78);
     }
 
-    /* Scrim */
+    /* Scrim — deepens on hover */
     .tile-scrim {
       position: absolute; inset: 0;
       background: rgba(0,0,0,0.15);
       pointer-events: none; z-index: 1;
+      transition: background 0.4s ease;
+    }
+    .pillar-hotspot:hover .tile-scrim {
+      background: rgba(0,0,0,0.32);
     }
 
-    /* Label — centered in tile */
+    /* Hover CTA circle */
+    .tile-cta {
+      position: absolute; inset: 0; z-index: 3;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .tile-cta-circle {
+      width: 56px; height: 56px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.72);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transform: scale(0.82);
+      transition: opacity 0.32s ease, transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .tile-cta-circle svg {
+      width: 18px; height: 18px; display: block;
+      fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 1.5;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    .pillar-hotspot:hover .tile-cta-circle {
+      opacity: 1; transform: scale(1);
+    }
+
+    /* Brief "click to explore" hint on load */
+    .home-hint {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 0.38rem; font-weight: 200; letter-spacing: 0.4em;
+      text-transform: uppercase; color: rgba(255,255,255,0.65);
+      white-space: nowrap; z-index: 6; pointer-events: none;
+      animation: hint-cycle 5s ease 0.9s both;
+    }
+    @keyframes hint-cycle {
+      0%   { opacity: 0; }
+      18%  { opacity: 1; }
+      72%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* Label — bottom-left, away from center circle */
     .tile-label {
-      position: absolute; inset: 0; z-index: 2;
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 5px;
+      align-items: flex-start; justify-content: flex-end;
+      gap: 4px; padding: 0 20px 22px;
       pointer-events: none;
     }
 
     .tile-num {
-      font-family: 'Exo 2', sans-serif;
-      font-size: 0.44rem;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.42rem;
       font-weight: 700;
-      font-style: normal;
-      letter-spacing: 0.22em;
+      letter-spacing: 0.24em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.5);
+      color: rgba(255,255,255,0.45);
     }
 
     .tile-name {
-      font-family: 'Exo 2', sans-serif;
-      font-size: clamp(0.7rem, 1vw, 0.9rem);
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(0.75rem, 1.1vw, 1rem);
       font-weight: 800;
-      font-style: normal;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: rgba(255,255,255,0.95);
-      text-align: center;
-      line-height: 1.3;
-      text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+      line-height: 1.2;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.4);
     }
 
     .home-credit {
@@ -171,7 +208,7 @@
     #back-btn {
       position: fixed; top: 30px; left: 40px; z-index: 30;
       background: none; border: none; cursor: pointer; padding: 0;
-      font-family: 'Exo 2', sans-serif; font-size: 0.52rem;
+      font-family: 'Syne', sans-serif; font-size: 0.52rem;
       letter-spacing: 0.18em; text-transform: uppercase;
       color: rgba(28, 36, 22, 0.4); font-weight: 700;
       transition: color 0.2s;
@@ -469,14 +506,12 @@
     }
 
     .sleep-nav-btn {
-      background: none; cursor: pointer;
-      border: 0.5px solid rgba(28,36,22,0.2);
-      color: rgba(28,36,22,0.42);
-      font-family: 'Josefin Sans', sans-serif; font-size: 0.75rem;
-      padding: 5px 13px; border-radius: 50px; line-height: 1;
-      transition: color 0.2s, border-color 0.2s;
+      background: none; cursor: pointer; border: none; padding: 0;
+      color: rgba(28,36,22,0.32); line-height: 0;
+      transition: color 0.22s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    .sleep-nav-btn:hover { color: var(--dark); border-color: rgba(28,36,22,0.52); }
+    .sleep-nav-btn:hover { color: var(--dark); transform: scale(1.12); }
+    .sleep-nav-btn svg { width: 34px; height: 34px; display: block; }
 
     .sleep-nav-dots { display: flex; gap: 6px; align-items: center; }
 
@@ -519,7 +554,7 @@
     }
 
     .sleep-info-col-label {
-      font-family: 'Exo 2', sans-serif;
+      font-family: 'Syne', sans-serif;
       font-size: 0.48rem; font-weight: 800;
       letter-spacing: 0.16em; text-transform: uppercase;
       color: var(--dark); white-space: nowrap; flex-shrink: 0;
@@ -636,6 +671,11 @@
           <span class="tile-num">01</span>
           <span class="tile-name">Sleep</span>
         </div>
+        <div class="tile-cta">
+          <div class="tile-cta-circle">
+            <svg viewBox="0 0 18 18"><path d="M7 4l5 5-5 5"/></svg>
+          </div>
+        </div>
       </div>
 
       <div class="pillar-hotspot" data-pillar="nutrition">
@@ -644,6 +684,11 @@
         <div class="tile-label">
           <span class="tile-num">02</span>
           <span class="tile-name">Nutrition</span>
+        </div>
+        <div class="tile-cta">
+          <div class="tile-cta-circle">
+            <svg viewBox="0 0 18 18"><path d="M7 4l5 5-5 5"/></svg>
+          </div>
         </div>
       </div>
 
@@ -654,6 +699,11 @@
           <span class="tile-num">03</span>
           <span class="tile-name">Exercise</span>
         </div>
+        <div class="tile-cta">
+          <div class="tile-cta-circle">
+            <svg viewBox="0 0 18 18"><path d="M7 4l5 5-5 5"/></svg>
+          </div>
+        </div>
       </div>
 
       <div class="pillar-hotspot" data-pillar="emotional">
@@ -663,10 +713,16 @@
           <span class="tile-num">04</span>
           <span class="tile-name">Emotional Health</span>
         </div>
+        <div class="tile-cta">
+          <div class="tile-cta-circle">
+            <svg viewBox="0 0 18 18"><path d="M7 4l5 5-5 5"/></svg>
+          </div>
+        </div>
       </div>
 
     </div>
     <p class="home-credit">Designing the Longevity Brand &nbsp;·&nbsp; Maya Glenn &nbsp;·&nbsp; UT Austin 2026</p>
+    <p class="home-hint">click to explore</p>
   </div>
 
   <!-- Kept for JS variable compatibility -->
@@ -698,14 +754,18 @@
             </div>
           </div>
           <div class="sleep-nav">
-            <button class="sleep-nav-btn sleep-prev">&#8592;</button>
+            <button class="sleep-nav-btn sleep-prev" aria-label="Previous">
+              <svg viewBox="0 0 34 34" fill="none" stroke="currentColor"><circle cx="17" cy="17" r="15.5" stroke-width="0.75"/><path d="M19 11.5l-5.5 5.5 5.5 5.5" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
             <div class="sleep-nav-dots">
               <span class="sleep-nav-dot active"></span>
               <span class="sleep-nav-dot"></span>
               <span class="sleep-nav-dot"></span>
               <span class="sleep-nav-dot"></span>
             </div>
-            <button class="sleep-nav-btn sleep-next">&#8594;</button>
+            <button class="sleep-nav-btn sleep-next" aria-label="Next">
+              <svg viewBox="0 0 34 34" fill="none" stroke="currentColor"><circle cx="17" cy="17" r="15.5" stroke-width="0.75"/><path d="M15 11.5l5.5 5.5-5.5 5.5" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
             <span class="sleep-counter">01 / 04</span>
           </div>
         </div>
@@ -750,13 +810,17 @@
             </div>
           </div>
           <div class="sleep-nav">
-            <button class="sleep-nav-btn sleep-prev">&#8592;</button>
+            <button class="sleep-nav-btn sleep-prev" aria-label="Previous">
+              <svg viewBox="0 0 34 34" fill="none" stroke="currentColor"><circle cx="17" cy="17" r="15.5" stroke-width="0.75"/><path d="M19 11.5l-5.5 5.5 5.5 5.5" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
             <div class="sleep-nav-dots">
               <span class="sleep-nav-dot active"></span>
               <span class="sleep-nav-dot"></span>
               <span class="sleep-nav-dot"></span>
             </div>
-            <button class="sleep-nav-btn sleep-next">&#8594;</button>
+            <button class="sleep-nav-btn sleep-next" aria-label="Next">
+              <svg viewBox="0 0 34 34" fill="none" stroke="currentColor"><circle cx="17" cy="17" r="15.5" stroke-width="0.75"/><path d="M15 11.5l5.5 5.5-5.5 5.5" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
             <span class="sleep-counter">01 / 03</span>
           </div>
         </div>
@@ -798,13 +862,17 @@
             </div>
           </div>
           <div class="sleep-nav">
-            <button class="sleep-nav-btn sleep-prev">&#8592;</button>
+            <button class="sleep-nav-btn sleep-prev" aria-label="Previous">
+              <svg viewBox="0 0 34 34" fill="none" stroke="currentColor"><circle cx="17" cy="17" r="15.5" stroke-width="0.75"/><path d="M19 11.5l-5.5 5.5 5.5 5.5" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
             <div class="sleep-nav-dots">
               <span class="sleep-nav-dot active"></span>
               <span class="sleep-nav-dot"></span>
               <span class="sleep-nav-dot"></span>
             </div>
-            <button class="sleep-nav-btn sleep-next">&#8594;</button>
+            <button class="sleep-nav-btn sleep-next" aria-label="Next">
+              <svg viewBox="0 0 34 34" fill="none" stroke="currentColor"><circle cx="17" cy="17" r="15.5" stroke-width="0.75"/><path d="M15 11.5l5.5 5.5-5.5 5.5" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
             <span class="sleep-counter">01 / 03</span>
           </div>
         </div>
@@ -846,13 +914,17 @@
             </div>
           </div>
           <div class="sleep-nav">
-            <button class="sleep-nav-btn sleep-prev">&#8592;</button>
+            <button class="sleep-nav-btn sleep-prev" aria-label="Previous">
+              <svg viewBox="0 0 34 34" fill="none" stroke="currentColor"><circle cx="17" cy="17" r="15.5" stroke-width="0.75"/><path d="M19 11.5l-5.5 5.5 5.5 5.5" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
             <div class="sleep-nav-dots">
               <span class="sleep-nav-dot active"></span>
               <span class="sleep-nav-dot"></span>
               <span class="sleep-nav-dot"></span>
             </div>
-            <button class="sleep-nav-btn sleep-next">&#8594;</button>
+            <button class="sleep-nav-btn sleep-next" aria-label="Next">
+              <svg viewBox="0 0 34 34" fill="none" stroke="currentColor"><circle cx="17" cy="17" r="15.5" stroke-width="0.75"/><path d="M15 11.5l5.5 5.5-5.5 5.5" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
             <span class="sleep-counter">01 / 03</span>
           </div>
         </div>
@@ -970,6 +1042,17 @@
         if (!container.classList.contains('active')) return;
         if (e.key === 'ArrowRight') goTo(current + 1);
         if (e.key === 'ArrowLeft')  goTo(current - 1);
+      });
+
+      // Swipe support
+      let touchStartX = null;
+      const inner = container.querySelector('.sleep-carousel-inner');
+      inner.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+      inner.addEventListener('touchend', e => {
+        if (touchStartX === null) return;
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 40) dx < 0 ? goTo(current + 1) : goTo(current - 1);
+        touchStartX = null;
       });
     }
 
