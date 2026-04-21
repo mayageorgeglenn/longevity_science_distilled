@@ -970,6 +970,7 @@
         setTimeout(() => {
           document.querySelectorAll('.pillar-page').forEach(p => p.classList.remove('active'));
           document.getElementById('page-' + pillar).classList.add('active');
+          if (carouselResets['page-' + pillar]) carouselResets['page-' + pillar]();
           pillarView.scrollTop = 0;
           pillarView.classList.add('visible');
           setTimeout(() => { animating = false; }, 580);
@@ -1011,6 +1012,8 @@
     });
 
     // ── PILLAR INFOGRAPHIC CAROUSELS ──────────────────────────────
+    const carouselResets = {};
+
     function initPillarCarousel(pageId) {
       const container = document.getElementById(pageId);
       if (!container) return;
@@ -1031,6 +1034,8 @@
           String(current + 1).padStart(2, '0') + ' / ' +
           String(slides.length).padStart(2, '0');
       }
+
+      carouselResets[pageId] = () => goTo(0);
 
       prevBtn.addEventListener('click', () => goTo(current - 1));
       nextBtn.addEventListener('click', () => goTo(current + 1));
